@@ -1,3 +1,20 @@
+radio.onReceivedNumber(function (receivedNumber) {
+    if (receivedNumber != 500) {
+        if (Math.floor(receivedNumber / 10) == shipHead.get(LedSpriteProperty.X) && Math.floor(receivedNumber % 10) == shipHead.get(LedSpriteProperty.Y) || Math.floor(receivedNumber / 10) == shipTail.get(LedSpriteProperty.X) && Math.floor(receivedNumber % 10) == shipTail.get(LedSpriteProperty.Y)) {
+            radio.sendValue("hit", 1)
+            basic.showString("hit")
+        } else {
+            radio.sendValue("miss", 1)
+            basic.showString("miss")
+        }
+        sending = true
+        game.pause()
+        selectorX = 2
+        selectorY = 2
+        basic.clearScreen()
+        drawSelector()
+    }
+})
 input.onButtonPressed(Button.A, function () {
     if (mode == 0) {
         if (shipHead.get(LedSpriteProperty.Y) == 4) {
@@ -12,6 +29,13 @@ input.onButtonPressed(Button.A, function () {
         }
         shipTail.set(LedSpriteProperty.X, tailSpotsX[tailPosArrayCounter])
         shipTail.set(LedSpriteProperty.Y, tailSpotsY[tailPosArrayCounter])
+    } else if (mode == 3 && sending == true) {
+        if (selectorY == 4) {
+            selectorY = 0
+        } else {
+            selectorY += 1
+        }
+        drawSelector()
     }
 })
 input.onButtonPressed(Button.AB, function () {
@@ -22,9 +46,16 @@ radio.onReceivedString(function (receivedString) {
         gotRadioMessage = true
         readyMessage = "ready2"
         playerNum = 2
+        music.playSoundEffect(music.createSoundEffect(WaveShape.Square, 1600, 1, 255, 0, 300, SoundExpressionEffect.None, InterpolationCurve.Curve), SoundExpressionPlayMode.UntilDone)
+        sending = false
     }
     if (receivedString == "ready2") {
         gotRadioMessage = true
+        game.pause()
+        basic.clearScreen()
+        selectorX = 2
+        selectorY = 2
+        drawSelector()
     }
 })
 input.onButtonPressed(Button.B, function () {
@@ -41,10 +72,31 @@ input.onButtonPressed(Button.B, function () {
         }
         shipTail.set(LedSpriteProperty.X, tailSpotsX[tailPosArrayCounter])
         shipTail.set(LedSpriteProperty.Y, tailSpotsY[tailPosArrayCounter])
+    } else if (mode == 3 && sending == true) {
+        if (selectorX == 4) {
+            selectorX = 0
+        } else {
+            selectorX += 1
+        }
+        drawSelector()
     }
 })
+function drawSelector () {
+    led.plot(selectorX, selectorY)
+    basic.clearScreen()
+    for (let index = 0; index <= checkedPosX.length - 1; index++) {
+        led.plotBrightness(checkedPosX[index], checkedPosY[index], 56)
+    }
+    led.plot(selectorX, selectorY)
+}
 radio.onReceivedValue(function (name, value) {
-	
+    if (name == "hit") {
+        basic.showString("hit")
+    } else {
+        basic.showString("miss")
+    }
+    sending = false
+    game.resume()
 })
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
     if (mode == 0) {
@@ -77,37 +129,44 @@ input.onLogoEvent(TouchButtonEvent.Pressed, function () {
     } else if (mode == 1) {
         mode += 1
         radio.sendString(readyMessage)
+    } else if (mode == 3) {
+        checkedPosX.push(selectorX)
+        checkedPosY.push(selectorY)
+        radio.sendNumber(selectorX * 10 + selectorY)
     }
 })
 let gameOn = false
-let tailStartPos = 0
 let gotRadioMessage = false
 let tailSpotsY: number[] = []
-let shipTail: game.LedSprite = null
 let tailSpotsX: number[] = []
-let tailPosArrayCounter = 0
-let playerNum = 0
+let shipTail: game.LedSprite = null
+let checkedPosY: number[] = []
+let checkedPosX: number[] = []
 let readyMessage = ""
-let mode = 0
 let shipHead: game.LedSprite = null
-let sending = true
+let sending = false
+let tailPosArrayCounter: number;
+let tailStartPos: number;
+let selectorX: number;
+let selectorY: number;
+let playerNum: number;
+let mode: number;
+sending = true
 music.setBuiltInSpeakerEnabled(true)
 radio.setGroup(177)
-radio.sendNumber(0)
+radio.sendNumber(500)
 shipHead = game.createSprite(2, 2)
 mode = 0
 readyMessage = "ready1"
 playerNum = 1
+checkedPosX = []
+checkedPosY = []
 basic.forever(function () {
     basic.pause(1000)
     if (gotRadioMessage) {
         if (mode == 2) {
             gameOn = true
-            mode += 1
-        }
-        if (playerNum == 2) {
-            music.playSoundEffect(music.createSoundEffect(WaveShape.Square, 1600, 1, 255, 0, 300, SoundExpressionEffect.None, InterpolationCurve.Curve), SoundExpressionPlayMode.UntilDone)
-            sending = false
+            mode = 3
         }
     }
 })
