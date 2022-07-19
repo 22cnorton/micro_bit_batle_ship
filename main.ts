@@ -1,18 +1,24 @@
 radio.onReceivedNumber(function (receivedNumber) {
     if (receivedNumber != 500) {
         if (Math.floor(receivedNumber / 10) == shipHead.get(LedSpriteProperty.X) && Math.floor(receivedNumber % 10) == shipHead.get(LedSpriteProperty.Y) || Math.floor(receivedNumber / 10) == shipTail.get(LedSpriteProperty.X) && Math.floor(receivedNumber % 10) == shipTail.get(LedSpriteProperty.Y)) {
-            radio.sendValue("hit", 1)
-            basic.showString("hit")
+            hits += 1
+            if (hits == 2) {
+                radio.sendValue("hit", 2)
+                basic.showString("You Lose")
+            } else {
+                radio.sendValue("hit", 1)
+                basic.showString("hit")
+            }
         } else {
             radio.sendValue("miss", 1)
             basic.showString("miss")
         }
         sending = true
-        game.pause()
         selectorX = 2
         selectorY = 2
-        basic.clearScreen()
+        game.pause()
         drawSelector()
+        music.playSoundEffect(music.createSoundEffect(WaveShape.Noise, 54, 54, 255, 0, 500, SoundExpressionEffect.None, InterpolationCurve.Linear), SoundExpressionPlayMode.UntilDone)
     }
 })
 input.onButtonPressed(Button.A, function () {
@@ -37,66 +43,6 @@ input.onButtonPressed(Button.A, function () {
         }
         drawSelector()
     }
-})
-input.onButtonPressed(Button.AB, function () {
-	
-})
-radio.onReceivedString(function (receivedString) {
-    if (receivedString == "ready1") {
-        gotRadioMessage = true
-        readyMessage = "ready2"
-        playerNum = 2
-        music.playSoundEffect(music.createSoundEffect(WaveShape.Square, 1600, 1, 255, 0, 300, SoundExpressionEffect.None, InterpolationCurve.Curve), SoundExpressionPlayMode.UntilDone)
-        sending = false
-    }
-    if (receivedString == "ready2") {
-        gotRadioMessage = true
-        game.pause()
-        basic.clearScreen()
-        selectorX = 2
-        selectorY = 2
-        drawSelector()
-    }
-})
-input.onButtonPressed(Button.B, function () {
-    if (mode == 0) {
-        if (shipHead.get(LedSpriteProperty.X) == 4) {
-            shipHead.set(LedSpriteProperty.X, 0)
-        } else {
-            shipHead.change(LedSpriteProperty.X, 1)
-        }
-    } else if (mode == 1) {
-        tailPosArrayCounter += -1
-        if (tailPosArrayCounter < 0) {
-            tailPosArrayCounter = tailSpotsX.length - 1
-        }
-        shipTail.set(LedSpriteProperty.X, tailSpotsX[tailPosArrayCounter])
-        shipTail.set(LedSpriteProperty.Y, tailSpotsY[tailPosArrayCounter])
-    } else if (mode == 3 && sending == true) {
-        if (selectorX == 4) {
-            selectorX = 0
-        } else {
-            selectorX += 1
-        }
-        drawSelector()
-    }
-})
-function drawSelector () {
-    led.plot(selectorX, selectorY)
-    basic.clearScreen()
-    for (let index = 0; index <= checkedPosX.length - 1; index++) {
-        led.plotBrightness(checkedPosX[index], checkedPosY[index], 56)
-    }
-    led.plot(selectorX, selectorY)
-}
-radio.onReceivedValue(function (name, value) {
-    if (name == "hit") {
-        basic.showString("hit")
-    } else {
-        basic.showString("miss")
-    }
-    sending = false
-    game.resume()
 })
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
     if (mode == 0) {
@@ -135,10 +81,82 @@ input.onLogoEvent(TouchButtonEvent.Pressed, function () {
         radio.sendNumber(selectorX * 10 + selectorY)
     }
 })
+input.onButtonPressed(Button.AB, function () {
+	
+})
+radio.onReceivedString(function (receivedString) {
+    if (receivedString == "ready1") {
+        gotRadioMessage = true
+        readyMessage = "ready2"
+        playerNum = 2
+        music.playSoundEffect(music.createSoundEffect(WaveShape.Square, 1600, 1, 255, 0, 300, SoundExpressionEffect.None, InterpolationCurve.Curve), SoundExpressionPlayMode.UntilDone)
+        sending = false
+    }
+    if (receivedString == "ready2") {
+        gotRadioMessage = true
+        game.pause()
+        basic.clearScreen()
+        selectorX = 2
+        selectorY = 2
+        led.plot(selectorX, selectorY)
+        drawSelector()
+    }
+})
+input.onButtonPressed(Button.B, function () {
+    if (mode == 0) {
+        if (shipHead.get(LedSpriteProperty.X) == 4) {
+            shipHead.set(LedSpriteProperty.X, 0)
+        } else {
+            shipHead.change(LedSpriteProperty.X, 1)
+        }
+    } else if (mode == 1) {
+        tailPosArrayCounter += -1
+        if (tailPosArrayCounter < 0) {
+            tailPosArrayCounter = tailSpotsX.length - 1
+        }
+        shipTail.set(LedSpriteProperty.X, tailSpotsX[tailPosArrayCounter])
+        shipTail.set(LedSpriteProperty.Y, tailSpotsY[tailPosArrayCounter])
+    } else if (sending == true && mode == 3) {
+        if (selectorX == 4) {
+            selectorX = 0
+        } else {
+            selectorX += 1
+        }
+        drawSelector()
+    }
+})
+function drawSelector () {
+    basic.showLeds(`
+        . . . . .
+        . . . . .
+        . . . . .
+        . . . . .
+        . . . . .
+        `)
+    for (let index = 0; index <= checkedPosX.length - 1; index++) {
+        led.plotBrightness(checkedPosX[index], checkedPosY[index], 56)
+    }
+    led.plot(selectorX, selectorY)
+}
+radio.onReceivedValue(function (name, value) {
+    if (name == "hit") {
+        if (value == 1) {
+            basic.showString("hit")
+        } else {
+            basic.showString("You Win!")
+            game.pause()
+        }
+    } else {
+        basic.showString("miss")
+    }
+    sending = false
+    game.resume()
+})
 let gameOn = false
 let gotRadioMessage = false
 let tailSpotsY: number[] = []
 let tailSpotsX: number[] = []
+let hits = 0
 let shipTail: game.LedSprite = null
 let checkedPosY: number[] = []
 let checkedPosX: number[] = []
