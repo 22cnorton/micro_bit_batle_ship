@@ -17,6 +17,7 @@ radio.onReceivedNumber(function (receivedNumber) {
         selectorX = 2
         selectorY = 2
         game.pause()
+        led.stopAnimation()
         drawSelector()
         music.playSoundEffect(music.createSoundEffect(WaveShape.Noise, 54, 54, 255, 0, 500, SoundExpressionEffect.None, InterpolationCurve.Linear), SoundExpressionPlayMode.UntilDone)
     }
@@ -126,13 +127,7 @@ input.onButtonPressed(Button.B, function () {
     }
 })
 function drawSelector () {
-    basic.showLeds(`
-        . . . . .
-        . . . . .
-        . . . . .
-        . . . . .
-        . . . . .
-        `)
+    basic.clearScreen()
     for (let index = 0; index <= checkedPosX.length - 1; index++) {
         led.plotBrightness(checkedPosX[index], checkedPosY[index], 56)
     }
