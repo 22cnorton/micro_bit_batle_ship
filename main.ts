@@ -1,3 +1,20 @@
+radio.onReceivedValue(function (name, value) {
+    if (name == "hit") {
+        if (value == 1) {
+            basic.showString("hit")
+        } else {
+            basic.showString("You Win!")
+            game.pause()
+        }
+    } else {
+        basic.showString("miss")
+    }
+    sending = false
+    game.resume()
+})
+input.onButtonPressed(Button.AB, function () {
+	
+})
 radio.onReceivedNumber(function (receivedNumber) {
     if (receivedNumber != 500) {
         if (Math.floor(receivedNumber / 10) == shipHead.get(LedSpriteProperty.X) && Math.floor(receivedNumber % 10) == shipHead.get(LedSpriteProperty.Y) || Math.floor(receivedNumber / 10) == shipTail.get(LedSpriteProperty.X) && Math.floor(receivedNumber % 10) == shipTail.get(LedSpriteProperty.Y)) {
@@ -20,29 +37,6 @@ radio.onReceivedNumber(function (receivedNumber) {
         led.stopAnimation()
         drawSelector()
         music.playSoundEffect(music.createSoundEffect(WaveShape.Noise, 54, 54, 255, 0, 500, SoundExpressionEffect.None, InterpolationCurve.Linear), SoundExpressionPlayMode.UntilDone)
-    }
-})
-input.onButtonPressed(Button.A, function () {
-    if (mode == 0) {
-        if (shipHead.get(LedSpriteProperty.Y) == 4) {
-            shipHead.set(LedSpriteProperty.Y, 0)
-        } else {
-            shipHead.change(LedSpriteProperty.Y, 1)
-        }
-    } else if (mode == 1) {
-        tailPosArrayCounter += 1
-        if (tailPosArrayCounter > tailSpotsX.length - 1) {
-            tailPosArrayCounter = 0
-        }
-        shipTail.set(LedSpriteProperty.X, tailSpotsX[tailPosArrayCounter])
-        shipTail.set(LedSpriteProperty.Y, tailSpotsY[tailPosArrayCounter])
-    } else if (mode == 3 && sending == true) {
-        if (selectorY == 4) {
-            selectorY = 0
-        } else {
-            selectorY += 1
-        }
-        drawSelector()
     }
 })
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
@@ -82,9 +76,6 @@ input.onLogoEvent(TouchButtonEvent.Pressed, function () {
         radio.sendNumber(selectorX * 10 + selectorY)
     }
 })
-input.onButtonPressed(Button.AB, function () {
-	
-})
 radio.onReceivedString(function (receivedString) {
     if (receivedString == "ready1") {
         gotRadioMessage = true
@@ -100,6 +91,36 @@ radio.onReceivedString(function (receivedString) {
         selectorX = 2
         selectorY = 2
         led.plot(selectorX, selectorY)
+        drawSelector()
+    }
+})
+function drawSelector () {
+    basic.clearScreen()
+    for (let index = 0; index <= checkedPosX.length - 1; index++) {
+        led.plotBrightness(checkedPosX[index], checkedPosY[index], 56)
+    }
+    led.plot(selectorX, selectorY)
+}
+input.onButtonPressed(Button.A, function () {
+    if (mode == 0) {
+        if (shipHead.get(LedSpriteProperty.Y) == 4) {
+            shipHead.set(LedSpriteProperty.Y, 0)
+        } else {
+            shipHead.change(LedSpriteProperty.Y, 1)
+        }
+    } else if (mode == 1) {
+        tailPosArrayCounter += 1
+        if (tailPosArrayCounter > tailSpotsX.length - 1) {
+            tailPosArrayCounter = 0
+        }
+        shipTail.set(LedSpriteProperty.X, tailSpotsX[tailPosArrayCounter])
+        shipTail.set(LedSpriteProperty.Y, tailSpotsY[tailPosArrayCounter])
+    } else if (mode == 3 && sending == true) {
+        if (selectorY == 4) {
+            selectorY = 0
+        } else {
+            selectorY += 1
+        }
         drawSelector()
     }
 })
@@ -125,27 +146,6 @@ input.onButtonPressed(Button.B, function () {
         }
         drawSelector()
     }
-})
-function drawSelector () {
-    basic.clearScreen()
-    for (let index = 0; index <= checkedPosX.length - 1; index++) {
-        led.plotBrightness(checkedPosX[index], checkedPosY[index], 56)
-    }
-    led.plot(selectorX, selectorY)
-}
-radio.onReceivedValue(function (name, value) {
-    if (name == "hit") {
-        if (value == 1) {
-            basic.showString("hit")
-        } else {
-            basic.showString("You Win!")
-            game.pause()
-        }
-    } else {
-        basic.showString("miss")
-    }
-    sending = false
-    game.resume()
 })
 let gameOn = false
 let gotRadioMessage = false
